@@ -31,6 +31,7 @@ export const getFile = async (id: string) =>
       password: true,
       userId: true,
       thumbnail: { select: { path: true } },
+      compressed: { select: { status: true } },
       tags: { select: { id: true, name: true, color: true } },
       Folder: { select: { id: true, public: true, name: true } },
     },
@@ -233,6 +234,8 @@ export async function render(
     <meta property="og:type" content="video.other" />
     <meta property="og:url" content="${pageUrl}" />
     <meta property="og:video:url" content="${host}/raw/${safeFilename}" />
+    <meta property="og:video:secure_url" content="${host}/raw/${safeFilename}" />
+    <meta property="og:video:type" content="${file.compressed?.status === 'done' ? 'video/mp4' : safeType}" />
     <meta property="og:video:width" content="1920" />
     <meta property="og:video:height" content="1080" />
   `
