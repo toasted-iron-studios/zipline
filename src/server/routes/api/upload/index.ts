@@ -11,6 +11,7 @@ import { sanitizeFilename } from '@/lib/fs';
 import { removeGps } from '@/lib/gps';
 import { log } from '@/lib/logger';
 import { runThumbnailWorkers } from '@/lib/tasks/run/thumbnails';
+import { runVideoCompressWorkers } from '@/lib/tasks/run/videoCompress';
 import { parseHeaders, UploadHeaders } from '@/lib/uploader/parseHeaders';
 import { onUpload } from '@/lib/webhooks';
 import { Prisma } from '@/prisma/client';
@@ -280,9 +281,28 @@ export default typedPlugin(
           const fileIds = response.files.map((x) => x.id);
 
           const thumbnailWorkers = server.tasks.workersBy('thumbnail');
-          if (!thumbnailWorkers.length) return;
+          if (thumbnailWorkers.length) {
+            runThumbnailWorkers(thumbnailWorkers, fileIds);
+          }
+        }
 
-          runThumbnailWorkers(thumbnailWorkers, fileIds);
+        if (
+          config.features.videoCompression.enabled &&
+          config.features.videoCompression.instantaneous
+        ) {
+          const videoIds = response.files
+            .filter((x) => x.type?.startsWith('video/'))
+            .map((x) => x.id);
+
+          if (videoIds.length) {
+            const workers = server.tasks.workersBy('videoCompress');
+            if (workers.length) {
+              logger.debug('dispatching video compression workers immediately', {
+                count: videoIds.length,
+              });
+              runVideoCompressWorkers(workers, videoIds);
+            }
+          }
         }
 
         return res.send(response);

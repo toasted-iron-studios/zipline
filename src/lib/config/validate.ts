@@ -210,6 +210,18 @@ export const schema = z.object({
       format: z.enum(['jpg', 'png', 'webp']).default('jpg'),
       instantaneous: z.boolean().default(false),
     }),
+    videoCompression: z.object({
+      enabled: z.boolean().default(false),
+      num_threads: z.number().default(2),
+      codec: z.string().default('libx264'),
+      crf: z.number().default(23),
+      preset: z.string().default('medium'),
+      maxHeight: z.number().default(1080),
+      maxBitrateKbps: z.number().default(0),
+      audioBitrateKbps: z.number().default(128),
+      keepOriginal: z.boolean().default(true),
+      instantaneous: z.boolean().default(true),
+    }),
     metrics: z.object({
       enabled: z.boolean().default(true),
       adminOnly: z.boolean().default(false),

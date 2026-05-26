@@ -70,6 +70,18 @@ export const rawConfig: any = {
       num_threads: undefined,
       format: undefined,
     },
+    videoCompression: {
+      enabled: undefined,
+      num_threads: undefined,
+      codec: undefined,
+      crf: undefined,
+      preset: undefined,
+      maxHeight: undefined,
+      maxBitrateKbps: undefined,
+      audioBitrateKbps: undefined,
+      keepOriginal: undefined,
+      instantaneous: undefined,
+    },
     metrics: {
       enabled: undefined,
       adminOnly: undefined,

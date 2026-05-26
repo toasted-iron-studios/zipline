@@ -51,6 +51,17 @@ export const DATABASE_TO_PROP = {
   featuresThumbnailsFormat: 'features.thumbnails.format',
   featuresThumbnailsInstantaneous: 'features.thumbnails.instantaneous',
 
+  featuresVideoCompressionEnabled: 'features.videoCompression.enabled',
+  featuresVideoCompressionNumberThreads: 'features.videoCompression.num_threads',
+  featuresVideoCompressionCodec: 'features.videoCompression.codec',
+  featuresVideoCompressionCrf: 'features.videoCompression.crf',
+  featuresVideoCompressionPreset: 'features.videoCompression.preset',
+  featuresVideoCompressionMaxHeight: 'features.videoCompression.maxHeight',
+  featuresVideoCompressionMaxBitrateKbps: 'features.videoCompression.maxBitrateKbps',
+  featuresVideoCompressionAudioBitrateKbps: 'features.videoCompression.audioBitrateKbps',
+  featuresVideoCompressionKeepOriginal: 'features.videoCompression.keepOriginal',
+  featuresVideoCompressionInstantaneous: 'features.videoCompression.instantaneous',
+
   featuresMetricsEnabled: 'features.metrics.enabled',
   featuresMetricsAdminOnly: 'features.metrics.adminOnly',
   featuresMetricsShowUserSpecific: 'features.metrics.showUserSpecific',

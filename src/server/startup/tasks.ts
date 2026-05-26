@@ -6,6 +6,7 @@ import deleteFiles from '@/lib/tasks/run/deleteFiles';
 import maxViews from '@/lib/tasks/run/maxViews';
 import metrics from '@/lib/tasks/run/metrics';
 import thumbnails from '@/lib/tasks/run/thumbnails';
+import videoCompress from '@/lib/tasks/run/videoCompress';
 import type { FastifyInstance } from 'fastify';
 import ms, { StringValue } from 'ms';
 
@@ -63,6 +64,53 @@ export function startTasks(server: FastifyInstance) {
               type: 'response',
               id,
               result: JSON.stringify(result),
+            });
+          }
+        },
+      );
+    }
+  }
+
+  if (config.features.videoCompression.enabled) {
+    tasks.interval(
+      'videoCompress',
+      ms(config.tasks.thumbnailsInterval as StringValue),
+      videoCompress(prisma),
+    );
+
+    for (let i = 0; i !== config.features.videoCompression.num_threads; ++i) {
+      tasks.worker(
+        `videoCompress-${i}`,
+        './build/offload/videoCompress.js',
+        {
+          id: `videoCompress-${i}`,
+          enabled: config.features.videoCompression.enabled,
+        },
+        async function (this: Worker, message: any) {
+          if (message.type === 'query') {
+            const { id, query, data } = message;
+
+            let result: any = null;
+            switch (query) {
+              case 'file.findUnique':
+                result = await prisma.file.findUnique(data);
+                break;
+              case 'compressedFile.create':
+                result = await prisma.compressedFile.create(data);
+                break;
+              case 'compressedFile.update':
+                result = await prisma.compressedFile.update(data);
+                break;
+              default:
+                console.error(`Unknown DB query (videoCompress): ${query}`);
+            }
+
+            this.postMessage({
+              type: 'response',
+              id,
+              result: JSON.stringify(result, (_, v) =>
+                typeof v === 'bigint' ? v.toString() : v,
+              ),
             });
           }
         },
