@@ -39,6 +39,8 @@ import {
   IconCopy,
   IconDeviceSdCard,
   IconDownload,
+  IconFileZip,
+  IconMovie,
   IconExternalLink,
   IconEyeFilled,
   IconFileInfo,
@@ -242,6 +244,13 @@ export default function FileModal({
             <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing='md' my='xs'>
               <FileStat Icon={IconFileInfo} title='Type' value={file.type} />
               <FileStat Icon={IconDeviceSdCard} title='Size' value={bytes(file.size)} />
+              {file.compressed?.status === 'done' && (
+                <FileStat
+                  Icon={IconFileZip}
+                  title='Compressed'
+                  value={`${bytes(file.compressed.size)} (${((file.compressed.size / file.size) * 100).toFixed(1)}% of original) · served by default`}
+                />
+              )}
               <FileStat
                 Icon={IconUpload}
                 title='Created at'
@@ -461,6 +470,22 @@ export default function FileModal({
                   onClick={() => downloadFile(file)}
                   tooltip='Download file'
                 />
+                {file.compressed?.status === 'done' && (
+                  <ActionButton
+                    Icon={IconMovie}
+                    onClick={() => {
+                      const origUrl = `${location.origin}/raw/${encodeURIComponent(file.name)}?original=1`;
+                      clipboard.copy(origUrl);
+                      showNotification({
+                        title: 'Original-quality link copied',
+                        message: origUrl,
+                        color: 'orange',
+                      });
+                    }}
+                    tooltip='Copy original (uncompressed) raw link'
+                    color='orange'
+                  />
+                )}
               </Group>
             </Group>
           </>

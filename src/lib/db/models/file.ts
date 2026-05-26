@@ -22,6 +22,12 @@ export const fileSelect = {
       path: true,
     },
   },
+  compressed: {
+    select: {
+      size: true,
+      status: true,
+    },
+  },
   tags: {
     select: tagSelectNoFiles,
   },
@@ -73,6 +79,14 @@ export const fileSchema = z.object({
       path: z.string(),
     })
     .nullable(),
+
+  compressed: z
+    .object({
+      size: z.union([z.number(), z.bigint(), z.string()]).transform((v) => Number(v)),
+      status: z.string(),
+    })
+    .nullable()
+    .optional(),
 
   tags: z.array(tagSchema).optional(),
 
