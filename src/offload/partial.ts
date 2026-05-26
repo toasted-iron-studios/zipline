@@ -8,12 +8,11 @@ import { User, userSelect } from '@/lib/db/models/user';
 import { log } from '@/lib/logger';
 import { randomCharacters } from '@/lib/random';
 import { UploadOptions } from '@/lib/uploader/parseHeaders';
-import { onUpload } from '@/lib/webhooks';
 import { Upload } from '@aws-sdk/lib-storage';
 import { createReadStream, createWriteStream } from 'fs';
 import { open, readdir, rm } from 'fs/promises';
 import { join } from 'path';
-import { isMainThread, workerData } from 'worker_threads';
+import { isMainThread, parentPort, workerData } from 'worker_threads';
 import { dbProxy } from './proxiedDb';
 
 export type PartialWorkerData = {
@@ -213,7 +212,13 @@ async function runComplete(id: string) {
     partial: true,
   });
 
-  await onUpload(config, {
+  // Defer the onUpload decision to the main thread, which has visibility into
+  // pending-Discord state and the video-compression worker pool. The main
+  // thread will either fire onUpload immediately or queue it behind the
+  // compression worker.
+  parentPort!.postMessage({
+    type: 'completed',
+    fileId: fileUpload.id,
     user: userr,
     file: fileUpload,
     link: {

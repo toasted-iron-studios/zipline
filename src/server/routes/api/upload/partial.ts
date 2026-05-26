@@ -17,6 +17,9 @@ import { readdir, rename, rm } from 'fs/promises';
 import { join } from 'path';
 import { Worker } from 'worker_threads';
 import { ApiUploadResponse } from '.';
+import { onUpload } from '@/lib/webhooks';
+import { defer as deferUpload, fire as fireDeferred } from '@/lib/webhooks/deferred';
+import { runVideoCompressWorkers } from '@/lib/tasks/run/videoCompress';
 
 const logger = log('api').c('upload').c('partial');
 
@@ -251,6 +254,35 @@ export default typedPlugin(
                 id: msg.id,
                 result: JSON.stringify(result),
               });
+            } else if (msg.type === 'completed') {
+              const willCompress =
+                config.features.videoCompression.enabled &&
+                config.features.videoCompression.instantaneous &&
+                msg.file?.type?.startsWith('video/');
+
+              if (willCompress) {
+                deferUpload(msg.fileId, {
+                  config,
+                  user: msg.user,
+                  file: msg.file,
+                  link: msg.link,
+                });
+
+                const workers = server.tasks.workersBy('videoCompress');
+                if (workers.length) {
+                  runVideoCompressWorkers(workers, [msg.fileId]);
+                } else {
+                  // No workers running (compression toggled off after upload started?);
+                  // fall back to immediate fire.
+                  await fireDeferred(msg.fileId);
+                }
+              } else {
+                await onUpload(config, {
+                  user: msg.user,
+                  file: msg.file,
+                  link: msg.link,
+                });
+              }
             }
           });
 
