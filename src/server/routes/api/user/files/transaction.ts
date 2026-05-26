@@ -182,6 +182,7 @@ export default typedPlugin(
         if (delete_datasourceFiles) {
           for (let i = 0; i !== toDeleteFiles.length; ++i) {
             await datasource.delete(toDeleteFiles[i].name);
+            await datasource.delete(`.compressed.${toDeleteFiles[i].id}.mp4`).catch(() => {});
           }
 
           logger.info(`${req.user.username} deleted ${toDeleteFiles.length} files from datasource`, {

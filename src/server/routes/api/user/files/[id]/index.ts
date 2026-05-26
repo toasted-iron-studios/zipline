@@ -197,6 +197,7 @@ export default typedPlugin(
         });
 
         await datasource.delete(deletedFile.name);
+        await datasource.delete(`.compressed.${deletedFile.id}.mp4`).catch(() => {});
 
         logger.info(`${req.user.username} deleted file ${deletedFile.name}`, {
           size: bytes(deletedFile.size),

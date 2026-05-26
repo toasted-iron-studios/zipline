@@ -79,6 +79,7 @@ export const rawFileHandler = async (
   if (file?.deletesAt && file.deletesAt <= new Date()) {
     try {
       await datasource.delete(file.name);
+      await datasource.delete(`.compressed.${file.id}.mp4`).catch(() => {});
       await prisma.file.delete({
         where: {
           id: file.id,
@@ -111,6 +112,7 @@ export const rawFileHandler = async (
     if (config.features.deleteOnMaxViews) {
       try {
         await datasource.delete(file.name);
+        await datasource.delete(`.compressed.${file.id}.mp4`).catch(() => {});
         await prisma.file.delete({
           where: { id: file.id },
         });

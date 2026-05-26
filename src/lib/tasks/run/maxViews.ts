@@ -46,6 +46,7 @@ export default function maxViews(prisma: typeof globalThis.__db__) {
     for (const file of files) {
       try {
         await datasource.delete(file.name);
+        await datasource.delete(`.compressed.${file.id}.mp4`).catch(() => {});
       } catch {
         this.logger.error('failed to delete file from datasource', {
           file: file.name,

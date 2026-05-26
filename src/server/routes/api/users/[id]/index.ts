@@ -200,6 +200,7 @@ export default typedPlugin(
               userId: user.id,
             },
             select: {
+              id: true,
               name: true,
             },
           });
@@ -223,6 +224,7 @@ export default typedPlugin(
 
           for (let i = 0; i !== files.length; ++i) {
             await datasource.delete(files[i].name);
+            await datasource.delete(`.compressed.${files[i].id}.mp4`).catch(() => {});
           }
 
           logger.info(`${req.user.username} deleted another user's files & urls`, {

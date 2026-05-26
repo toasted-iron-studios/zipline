@@ -76,6 +76,7 @@ export default typedPlugin(
         if (file?.deletesAt && file.deletesAt <= new Date()) {
           try {
             await datasource.delete(file.name);
+            await datasource.delete(`.compressed.${file.id}.mp4`).catch(() => {});
             await prisma.file.delete({
               where: {
                 id: file.id,
@@ -97,6 +98,7 @@ export default typedPlugin(
 
           try {
             await datasource.delete(file.name);
+            await datasource.delete(`.compressed.${file.id}.mp4`).catch(() => {});
             await prisma.file.delete({
               where: {
                 id: file.id,

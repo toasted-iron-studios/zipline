@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/db';
 import { Tasks } from '@/lib/tasks';
+import cleanCompressed from '@/lib/tasks/run/cleanCompressed';
 import cleanThumbnails from '@/lib/tasks/run/cleanThumbnails';
 import clearInvites from '@/lib/tasks/run/clearInvites';
 import deleteFiles from '@/lib/tasks/run/deleteFiles';
@@ -23,6 +24,11 @@ export function startTasks(server: FastifyInstance) {
     'cleanthumbnails',
     ms(config.tasks.cleanThumbnailsInterval as StringValue),
     cleanThumbnails(prisma),
+  );
+  tasks.interval(
+    'cleancompressed',
+    ms(config.tasks.cleanThumbnailsInterval as StringValue),
+    cleanCompressed(prisma),
   );
 
   if (config.features.metrics)
