@@ -65,6 +65,17 @@ model Zipline {
   featuresThumbnailsFormat         String   @default("jpg")
   featuresThumbnailsInstantaneous  Boolean  @default(false)
 
+  featuresVideoCompressionEnabled          Boolean @default(false)
+  featuresVideoCompressionNumberThreads    Int     @default(2)
+  featuresVideoCompressionCodec            String  @default("libx264")
+  featuresVideoCompressionCrf              Int     @default(23)
+  featuresVideoCompressionPreset           String  @default("medium")
+  featuresVideoCompressionMaxHeight        Int     @default(1080)
+  featuresVideoCompressionMaxBitrateKbps   Int     @default(0)
+  featuresVideoCompressionAudioBitrateKbps Int     @default(128)
+  featuresVideoCompressionKeepOriginal     Boolean @default(true)
+  featuresVideoCompressionInstantaneous    Boolean @default(true)
+
   featuresMetricsEnabled          Boolean @default(true)
   featuresMetricsAdminOnly        Boolean @default(false)
   featuresMetricsShowUserSpecific Boolean @default(true)
@@ -296,7 +307,24 @@ model File {
   Folder   Folder? @relation(fields: [folderId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   folderId String?
 
-  thumbnail Thumbnail?
+  thumbnail  Thumbnail?
+  compressed CompressedFile?
+}
+
+model CompressedFile {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  path   String
+  size   BigInt   @default(0)
+  status String   @default("pending")
+  error  String?
+
+  file   File   @relation(fields: [fileId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  fileId String
+
+  @@unique([fileId])
 }
 
 model Thumbnail {
