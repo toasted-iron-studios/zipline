@@ -82,7 +82,7 @@ export const fileSchema = z.object({
 
   compressed: z
     .object({
-      size: z.union([z.number(), z.bigint(), z.string()]).transform((v) => Number(v)),
+      size: z.number(),
       status: z.string(),
     })
     .nullable()
