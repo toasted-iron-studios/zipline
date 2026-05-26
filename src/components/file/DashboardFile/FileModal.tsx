@@ -44,7 +44,7 @@ import {
   IconFileInfo,
   IconFileZip,
   IconFolderMinus,
-  IconHd,
+  IconMovie,
   IconPencil,
   IconRefresh,
   IconStar,
@@ -472,7 +472,7 @@ export default function FileModal({
                 />
                 {file.compressed?.status === 'done' && (
                   <ActionButton
-                    Icon={IconHd}
+                    Icon={IconMovie}
                     onClick={() =>
                       window.open(`/raw/${encodeURIComponent(file.name)}?original=1&download=true`, '_blank')
                     }

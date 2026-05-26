@@ -45,7 +45,7 @@ import {
   IconFileInfo,
   IconFileZip,
   IconFolderMinus,
-  IconHd,
+  IconMovie,
   IconInfoCircle,
   IconPencil,
   IconRefresh,
@@ -282,7 +282,7 @@ export default function FileViewer({
       <ActionButton Icon={IconDownload} onClick={() => downloadFile(file)} tooltip='Download' />
       {file?.compressed?.status === 'done' && (
         <ActionButton
-          Icon={IconHd}
+          Icon={IconMovie}
           onClick={() =>
             window.open(`/raw/${encodeURIComponent(file.name)}?original=1&download=true`, '_blank')
           }

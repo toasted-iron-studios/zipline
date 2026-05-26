@@ -21,7 +21,7 @@ import {
   Tooltip,
   Typography,
 } from '@mantine/core';
-import { IconDownload, IconExternalLink, IconHd, IconInfoCircleFilled } from '@tabler/icons-react';
+import { IconDownload, IconExternalLink, IconMovie, IconInfoCircleFilled } from '@tabler/icons-react';
 import * as sanitize from 'isomorphic-dompurify';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -235,7 +235,7 @@ export default function ViewFileId() {
                       to={`/raw/${file.name}?original=1&download=true${token ? `&token=${encodeURIComponent(token)}` : ''}`}
                       target='_blank'
                     >
-                      <IconHd size='1rem' />
+                      <IconMovie size='1rem' />
                     </ActionIcon>
                   </Tooltip>
                 </>
