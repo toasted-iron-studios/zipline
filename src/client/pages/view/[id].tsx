@@ -184,7 +184,9 @@ export default function ViewFileId() {
                 ))}
               {user?.view!.showMimetype && (
                 <Text size='sm' c='dimmed' ml='sm' style={{ alignSelf: 'center' }}>
-                  {file.type}
+                  {(file as any).compressed?.status === 'done'
+                    ? `${file.type} → video/mp4 (compressed)`
+                    : file.type}
                 </Text>
               )}
             </Group>

@@ -281,14 +281,24 @@ export default function FileViewer({
       <ActionButton Icon={IconCopy} onClick={() => copyFile(file, clipboard)} tooltip='Copy file link' />
       <ActionButton Icon={IconDownload} onClick={() => downloadFile(file)} tooltip='Download' />
       {file?.compressed?.status === 'done' && (
-        <ActionButton
-          Icon={IconMovie}
-          onClick={() =>
-            window.open(`/raw/${encodeURIComponent(file.name)}?original=1&download=true`, '_blank')
-          }
-          tooltip='Download original (uncompressed)'
-          color='orange'
-        />
+        <>
+          <ActionButton
+            Icon={IconExternalLink}
+            onClick={() =>
+              window.open(`/raw/${encodeURIComponent(file.name)}?original=1`, '_blank')
+            }
+            tooltip='View original (uncompressed)'
+            color='orange'
+          />
+          <ActionButton
+            Icon={IconMovie}
+            onClick={() =>
+              window.open(`/raw/${encodeURIComponent(file.name)}?original=1&download=true`, '_blank')
+            }
+            tooltip='Download original (uncompressed)'
+            color='orange'
+          />
+        </>
       )}
     </ActionIcon.Group>
   ) : null;
@@ -507,7 +517,9 @@ export default function FileViewer({
                 </Text>
                 {file && (
                   <Text size='sm' c='dimmed' lineClamp={1}>
-                    {file.type} ({bytes(file.size)})
+                    {file.compressed?.status === 'done'
+                      ? `${file.type} (${bytes(file.size)}) → serving video/mp4 (${bytes(file.compressed.size)})`
+                      : `${file.type} (${bytes(file.size)})`}
                   </Text>
                 )}
               </Box>
@@ -525,7 +537,9 @@ export default function FileViewer({
                   </Text>
                   {file && (
                     <Text size='sm' c='dimmed' lineClamp={1}>
-                      {file.type} ({bytes(file.size)})
+                      {file.compressed?.status === 'done'
+                        ? `${file.type} (${bytes(file.size)}) → serving video/mp4 (${bytes(file.compressed.size)})`
+                        : `${file.type} (${bytes(file.size)})`}
                     </Text>
                   )}
                 </Box>
