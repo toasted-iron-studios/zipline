@@ -7,6 +7,7 @@ import maxViews from '@/lib/tasks/run/maxViews';
 import metrics from '@/lib/tasks/run/metrics';
 import thumbnails from '@/lib/tasks/run/thumbnails';
 import videoCompress from '@/lib/tasks/run/videoCompress';
+import { fire as fireDeferred, discard as discardDeferred } from '@/lib/webhooks/deferred';
 import type { FastifyInstance } from 'fastify';
 import ms, { StringValue } from 'ms';
 
@@ -110,6 +111,11 @@ export function startTasks(server: FastifyInstance) {
               id,
               result: JSON.stringify(result, (_, v) => (typeof v === 'bigint' ? v.toString() : v)),
             });
+          } else if (message.type === 'compressed') {
+            const fileId = message.data?.id;
+            if (fileId) {
+              fireDeferred(fileId).catch(() => discardDeferred(fileId));
+            }
           }
         },
       );

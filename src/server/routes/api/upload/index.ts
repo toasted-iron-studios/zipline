@@ -14,6 +14,7 @@ import { runThumbnailWorkers } from '@/lib/tasks/run/thumbnails';
 import { runVideoCompressWorkers } from '@/lib/tasks/run/videoCompress';
 import { parseHeaders, UploadHeaders } from '@/lib/uploader/parseHeaders';
 import { onUpload } from '@/lib/webhooks';
+import { defer as deferUpload } from '@/lib/webhooks/deferred';
 import { Prisma } from '@/prisma/client';
 import { userMiddleware } from '@/server/middleware/user';
 import typedPlugin from '@/server/typedPlugin';
@@ -251,20 +252,37 @@ export default typedPlugin(
             { size: bytes(compressed?.buffer?.length ?? fileUpload.size), ip: req.ip },
           );
 
-          await onUpload(config, {
-            user: req.user ?? {
-              id: 'anonymous',
-              username: 'anonymous',
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              role: 'USER',
-            },
-            file: fileUpload,
-            link: {
-              raw: `${domain}/raw/${encodeURIComponent(fileUpload.name)}`,
-              returned: encodeURI(responseUrl),
-            },
-          });
+          const uploadUser = req.user ?? {
+            id: 'anonymous',
+            username: 'anonymous',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            role: 'USER' as const,
+          };
+          const uploadLink = {
+            raw: `${domain}/raw/${encodeURIComponent(fileUpload.name)}`,
+            returned: encodeURI(responseUrl),
+          };
+
+          const willCompress =
+            config.features.videoCompression.enabled &&
+            config.features.videoCompression.instantaneous &&
+            fileUpload.type?.startsWith('video/');
+
+          if (willCompress) {
+            deferUpload(fileUpload.id, {
+              config,
+              user: uploadUser as any,
+              file: fileUpload as any,
+              link: uploadLink,
+            });
+          } else {
+            await onUpload(config, {
+              user: uploadUser,
+              file: fileUpload,
+              link: uploadLink,
+            });
+          }
         }
 
         if (options.noJson)

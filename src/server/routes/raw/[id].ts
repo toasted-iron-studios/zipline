@@ -58,12 +58,23 @@ export const rawFileHandler = async (
       .send(buf);
   }
 
+  const wantsOriginal = (req.query as { original?: string }).original === '1';
+
   const file = await prisma.file.findFirst({
     where: {
       name: decodeURIComponent(id),
     },
+    include: { compressed: true },
   });
   if (!file) return res.callNotFound();
+
+  // If a successfully-compressed sibling exists and the caller didn't explicitly
+  // ask for the original, transparently serve the compressed mp4 — same URL,
+  // smaller payload, Discord-embeddable.
+  const useCompressed = !wantsOriginal && file.compressed?.status === 'done';
+  const servedPath = useCompressed ? file.compressed!.path : file.name;
+  const servedType = useCompressed ? 'video/mp4' : file.type;
+  const servedSize = useCompressed ? Number(file.compressed!.size) : Number(file.size);
 
   if (file?.deletesAt && file.deletesAt <= new Date()) {
     try {
@@ -84,7 +95,7 @@ export const rawFileHandler = async (
     if (!valid) throw new ApiError(3018);
   }
 
-  const size = file?.size || (await datasource.size(file?.name ?? id));
+  const size = servedSize || (await datasource.size(servedPath));
 
   // view stuff
   const now = Date.now();
@@ -124,13 +135,13 @@ export const rawFileHandler = async (
     }
   };
 
-  const fileType = file?.type || 'application/octet-stream';
+  const fileType = servedType || 'application/octet-stream';
   const contentType = fileType.startsWith('text/') ? `${fileType}; charset=utf-8` : fileType;
 
   if (req.headers.range) {
     const [start, end] = parseRange(req.headers.range, size);
     if (start >= size || end >= size) {
-      const buf = await datasource.get(file?.name ?? id);
+      const buf = await datasource.get(servedPath);
       if (!buf) return res.callNotFound();
 
       await countView();
@@ -149,7 +160,7 @@ export const rawFileHandler = async (
         .send(buf);
     }
 
-    const buf = await datasource.range(file?.name ?? id, start || 0, end);
+    const buf = await datasource.range(servedPath, start || 0, end);
     if (!buf) return res.callNotFound();
 
     await countView();
@@ -170,7 +181,7 @@ export const rawFileHandler = async (
       .send(buf);
   }
 
-  const buf = await datasource.get(file?.name ?? id);
+  const buf = await datasource.get(servedPath);
   if (!buf) return res.callNotFound();
 
   await countView();
