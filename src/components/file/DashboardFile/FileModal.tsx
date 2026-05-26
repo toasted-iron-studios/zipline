@@ -474,10 +474,7 @@ export default function FileModal({
                   <ActionButton
                     Icon={IconHd}
                     onClick={() =>
-                      window.open(
-                        `/raw/${encodeURIComponent(file.name)}?original=1&download=true`,
-                        '_blank',
-                      )
+                      window.open(`/raw/${encodeURIComponent(file.name)}?original=1&download=true`, '_blank')
                     }
                     tooltip='Download original (uncompressed)'
                     color='orange'

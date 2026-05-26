@@ -21,7 +21,7 @@ import {
   Tooltip,
   Typography,
 } from '@mantine/core';
-import { IconDownload, IconExternalLink, IconInfoCircleFilled } from '@tabler/icons-react';
+import { IconDownload, IconExternalLink, IconHd, IconInfoCircleFilled } from '@tabler/icons-react';
 import * as sanitize from 'isomorphic-dompurify';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -212,6 +212,34 @@ export default function ViewFileId() {
                   <IconDownload size='1rem' />
                 </ActionIcon>
               </Tooltip>
+              {(file as any).compressed?.status === 'done' && (
+                <>
+                  <Tooltip label='View original (uncompressed)'>
+                    <ActionIcon
+                      size='md'
+                      variant='outline'
+                      color='orange'
+                      component={Link}
+                      to={`/raw/${file.name}?original=1${token ? `&token=${encodeURIComponent(token)}` : ''}`}
+                      target='_blank'
+                    >
+                      <IconExternalLink size='1rem' />
+                    </ActionIcon>
+                  </Tooltip>
+                  <Tooltip label='Download original (uncompressed)'>
+                    <ActionIcon
+                      size='md'
+                      variant='outline'
+                      color='orange'
+                      component={Link}
+                      to={`/raw/${file.name}?original=1&download=true${token ? `&token=${encodeURIComponent(token)}` : ''}`}
+                      target='_blank'
+                    >
+                      <IconHd size='1rem' />
+                    </ActionIcon>
+                  </Tooltip>
+                </>
+              )}
             </ActionIcon.Group>
           </Group>
 
