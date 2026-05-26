@@ -20,6 +20,7 @@ import { ApiUploadResponse } from '.';
 import { onUpload } from '@/lib/webhooks';
 import { defer as deferUpload, fire as fireDeferred } from '@/lib/webhooks/deferred';
 import { runVideoCompressWorkers } from '@/lib/tasks/run/videoCompress';
+import { runThumbnailWorkers } from '@/lib/tasks/run/thumbnails';
 
 const logger = log('api').c('upload').c('partial');
 
@@ -255,6 +256,18 @@ export default typedPlugin(
                 result: JSON.stringify(result),
               });
             } else if (msg.type === 'completed') {
+              // Chunked uploads never dispatched thumbnail workers upstream;
+              // fix that here so big videos get a preview frame without waiting
+              // for the 30-minute interval scan.
+              if (
+                config.features.thumbnails.enabled &&
+                config.features.thumbnails.instantaneous &&
+                msg.file?.type?.startsWith('video/')
+              ) {
+                const thumbWorkers = server.tasks.workersBy('thumbnail');
+                if (thumbWorkers.length) runThumbnailWorkers(thumbWorkers, [msg.fileId]);
+              }
+
               const willCompress =
                 config.features.videoCompression.enabled &&
                 config.features.videoCompression.instantaneous &&
