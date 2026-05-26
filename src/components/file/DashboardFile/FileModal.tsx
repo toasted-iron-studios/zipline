@@ -39,12 +39,12 @@ import {
   IconCopy,
   IconDeviceSdCard,
   IconDownload,
-  IconFileZip,
-  IconMovie,
   IconExternalLink,
   IconEyeFilled,
   IconFileInfo,
+  IconFileZip,
   IconFolderMinus,
+  IconHd,
   IconPencil,
   IconRefresh,
   IconStar,
@@ -472,17 +472,14 @@ export default function FileModal({
                 />
                 {file.compressed?.status === 'done' && (
                   <ActionButton
-                    Icon={IconMovie}
-                    onClick={() => {
-                      const origUrl = `${location.origin}/raw/${encodeURIComponent(file.name)}?original=1`;
-                      clipboard.copy(origUrl);
-                      showNotification({
-                        title: 'Original-quality link copied',
-                        message: origUrl,
-                        color: 'orange',
-                      });
-                    }}
-                    tooltip='Copy original (uncompressed) raw link'
+                    Icon={IconHd}
+                    onClick={() =>
+                      window.open(
+                        `/raw/${encodeURIComponent(file.name)}?original=1&download=true`,
+                        '_blank',
+                      )
+                    }
+                    tooltip='Download original (uncompressed)'
                     color='orange'
                   />
                 )}

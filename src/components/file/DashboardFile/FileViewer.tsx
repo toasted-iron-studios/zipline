@@ -45,8 +45,8 @@ import {
   IconFileInfo,
   IconFileZip,
   IconFolderMinus,
+  IconHd,
   IconInfoCircle,
-  IconMovie,
   IconPencil,
   IconRefresh,
   IconStar,
@@ -282,17 +282,11 @@ export default function FileViewer({
       <ActionButton Icon={IconDownload} onClick={() => downloadFile(file)} tooltip='Download' />
       {file?.compressed?.status === 'done' && (
         <ActionButton
-          Icon={IconMovie}
-          onClick={() => {
-            const origUrl = `${location.origin}/raw/${encodeURIComponent(file.name)}?original=1`;
-            clipboard.copy(origUrl);
-            showNotification({
-              title: 'Original-quality link copied',
-              message: origUrl,
-              color: 'orange',
-            });
-          }}
-          tooltip='Copy original (uncompressed) raw link'
+          Icon={IconHd}
+          onClick={() =>
+            window.open(`/raw/${encodeURIComponent(file.name)}?original=1&download=true`, '_blank')
+          }
+          tooltip='Download original (uncompressed)'
           color='orange'
         />
       )}
