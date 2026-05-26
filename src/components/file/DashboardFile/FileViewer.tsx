@@ -284,9 +284,7 @@ export default function FileViewer({
         <>
           <ActionButton
             Icon={IconExternalLink}
-            onClick={() =>
-              window.open(`/raw/${encodeURIComponent(file.name)}?original=1`, '_blank')
-            }
+            onClick={() => window.open(`/raw/${encodeURIComponent(file.name)}?original=1`, '_blank')}
             tooltip='View original (uncompressed)'
             color='orange'
           />
