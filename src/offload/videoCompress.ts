@@ -77,10 +77,7 @@ function compress(
       .output(output);
 
     if (opts.maxBitrateKbps > 0) {
-      cmd.outputOptions([
-        `-maxrate ${opts.maxBitrateKbps}k`,
-        `-bufsize ${opts.maxBitrateKbps * 2}k`,
-      ]);
+      cmd.outputOptions([`-maxrate ${opts.maxBitrateKbps}k`, `-bufsize ${opts.maxBitrateKbps * 2}k`]);
     }
 
     cmd

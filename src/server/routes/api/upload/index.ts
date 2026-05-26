@@ -286,13 +286,8 @@ export default typedPlugin(
           }
         }
 
-        if (
-          config.features.videoCompression.enabled &&
-          config.features.videoCompression.instantaneous
-        ) {
-          const videoIds = response.files
-            .filter((x) => x.type?.startsWith('video/'))
-            .map((x) => x.id);
+        if (config.features.videoCompression.enabled && config.features.videoCompression.instantaneous) {
+          const videoIds = response.files.filter((x) => x.type?.startsWith('video/')).map((x) => x.id);
 
           if (videoIds.length) {
             const workers = server.tasks.workersBy('videoCompress');

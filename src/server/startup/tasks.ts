@@ -108,9 +108,7 @@ export function startTasks(server: FastifyInstance) {
             this.postMessage({
               type: 'response',
               id,
-              result: JSON.stringify(result, (_, v) =>
-                typeof v === 'bigint' ? v.toString() : v,
-              ),
+              result: JSON.stringify(result, (_, v) => (typeof v === 'bigint' ? v.toString() : v)),
             });
           }
         },
