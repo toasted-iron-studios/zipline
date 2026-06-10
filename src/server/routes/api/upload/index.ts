@@ -285,12 +285,11 @@ export default typedPlugin(
           }
         }
 
-        if (options.noJson)
-          return res
-            .status(200)
-            .type('text/plain')
-            .send(response.files.map((x) => x.url).join(','));
-
+        // Dispatch the instantaneous thumbnail + video-compression workers BEFORE the
+        // noJson early-return below. Plain-text (x-zipline-no-json) uploads — e.g. the
+        // CLI / curl agents — would otherwise return here and skip dispatch entirely,
+        // leaving compression (and the deferred Discord webhook that waits on it) to the
+        // 30-minute interval task. That made API-posted clips lag/batch vs immediate UI uploads.
         if (config.features.thumbnails.instantaneous) {
           logger.debug('running thumbnail workers immediately due to configuration', {
             files: response.files.length,
@@ -317,6 +316,12 @@ export default typedPlugin(
             }
           }
         }
+
+        if (options.noJson)
+          return res
+            .status(200)
+            .type('text/plain')
+            .send(response.files.map((x) => x.url).join(','));
 
         return res.send(response);
       },
