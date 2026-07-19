@@ -55,6 +55,7 @@ export type UploadHeaders = {
   'x-zipline-original-name'?: StringBoolean;
 
   'x-zipline-folder'?: string;
+  'x-zipline-tags'?: string;
 
   'x-zipline-filename'?: string;
   'x-zipline-domain'?: string;
@@ -90,6 +91,7 @@ export type UploadOptions = {
   };
 
   folder?: string;
+  tags?: string[];
 
   // partials
   partial?: {
@@ -246,6 +248,21 @@ export function parseHeaders(headers: UploadHeaders, fileConfig: Config['files']
 
   const folder = headers['x-zipline-folder'];
   if (folder) response.folder = folder;
+
+  const tags = headers['x-zipline-tags'];
+  if (tags) {
+    const tagIds = [
+      ...new Set(
+        tags
+          .split(',')
+          .map((tag) => tag.trim())
+          .filter(Boolean),
+      ),
+    ];
+    if (!tagIds.length) throwHeaderError('x-zipline-tags', 'No tag IDs provided');
+
+    response.tags = tagIds;
+  }
 
   response.overrides = {};
 

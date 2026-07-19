@@ -13,6 +13,7 @@ import { log } from '@/lib/logger';
 import { runThumbnailWorkers } from '@/lib/tasks/run/thumbnails';
 import { runVideoCompressWorkers } from '@/lib/tasks/run/videoCompress';
 import { parseHeaders, UploadHeaders } from '@/lib/uploader/parseHeaders';
+import { validateUploadTags } from '@/lib/uploader/validateTags';
 import { onUpload } from '@/lib/webhooks';
 import { defer as deferUpload } from '@/lib/webhooks/deferred';
 import { Prisma } from '@/prisma/client';
@@ -100,6 +101,8 @@ export default typedPlugin(
           if (!folder) throw new ApiError(4001);
           if (!req.user && !folder.allowUploads) throw new ApiError(3002);
         }
+
+        const tags = await validateUploadTags(options.tags, req.user?.id);
 
         let files: SavedMultipartFile[] = [];
         try {
@@ -218,6 +221,7 @@ export default typedPlugin(
           if (options.maxViews) data.maxViews = options.maxViews;
           if (options.password) data.password = await hashPassword(options.password);
           if (folder) data.Folder = { connect: { id: folder.id } };
+          if (tags.length) data.tags = { connect: tags };
           if (options.addOriginalName) {
             const sanitizedOG = sanitizeFilename(file.filename);
             if (!sanitizedOG) throw new ApiError(1008, `file[${i}]: Invalid characters in original filename`);

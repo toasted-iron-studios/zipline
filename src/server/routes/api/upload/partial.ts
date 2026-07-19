@@ -9,6 +9,7 @@ import { log } from '@/lib/logger';
 import { guess } from '@/lib/mimes';
 import { randomCharacters } from '@/lib/random';
 import { UploadHeaders, UploadOptions, parseHeaders } from '@/lib/uploader/parseHeaders';
+import { validateUploadTags } from '@/lib/uploader/validateTags';
 import { Prisma } from '@/prisma/client';
 import { userMiddleware } from '@/server/middleware/user';
 import typedPlugin from '@/server/typedPlugin';
@@ -93,6 +94,8 @@ export default typedPlugin(
           if (!req.user && !folder.allowUploads) throw new ApiError(3002);
         }
 
+        if (options.partial.range[0] === 0) await validateUploadTags(options.tags, req.user?.id);
+
         const { files } = await req.saveRequestFiles({ tmpdir: config.core.tempDirectory });
 
         const response: ApiUploadPartialResponse = {
@@ -154,6 +157,14 @@ export default typedPlugin(
         await rename(file.filepath, tempFile);
 
         if (options.partial.lastchunk) {
+          let tags;
+          try {
+            tags = await validateUploadTags(cache.options.tags, req.user?.id);
+          } catch (error) {
+            await deletePartial(options.partial.identifier);
+            throw error;
+          }
+
           const extension = getExtension(options.partial.filename, options.overrides?.extension);
           if (config.files.disabledExtensions.includes(extension)) throw new ApiError(1006);
 
@@ -195,6 +206,7 @@ export default typedPlugin(
           if (options.password) data.password = await hashPassword(options.password);
           if (options.maxViews) data.maxViews = options.maxViews;
           if (folder) data.Folder = { connect: { id: folder.id } };
+          if (tags.length) data.tags = { connect: tags };
           if (options.addOriginalName) {
             const sanitizedOG = sanitizeFilename(options.partial.filename);
             if (!sanitizedOG) throw new ApiError(1008);
