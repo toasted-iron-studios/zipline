@@ -141,7 +141,7 @@ async function processOne(config: Config, datasource: Datasource, fileId: string
   const compressedPath = compressedNameFor(file);
 
   // upsert pending row
-  let row: CompressedRow;
+  let row: CompressedRow | null;
   if (!existing) {
     row = await dbProxy<CompressedRow>('compressedFile.create', {
       data: { fileId: file.id, path: compressedPath, status: 'pending' },
@@ -151,6 +151,15 @@ async function processOne(config: Config, datasource: Datasource, fileId: string
       where: { id: existing.id },
       data: { status: 'pending', error: null, path: compressedPath },
     });
+  }
+
+  if (!row) {
+    try {
+      unlinkSync(tmpIn);
+    } catch {
+      // File was deleted while compression was starting.
+    }
+    return;
   }
 
   try {
@@ -172,10 +181,16 @@ async function processOne(config: Config, datasource: Datasource, fileId: string
     }
     await datasource.put(compressedPath, buf, { mimetype: 'video/mp4' });
 
-    await dbProxy('compressedFile.update', {
+    const completed = await dbProxy<CompressedRow | null>('compressedFile.update', {
       where: { id: row.id },
       data: { size: BigInt(stat.size), status: 'done', error: null },
     });
+
+    if (!completed) {
+      await datasource.delete(compressedPath).catch(() => {});
+      logger.debug('file deleted while compression was finishing', { id: file.id });
+      return;
+    }
 
     if (!vc.keepOriginal) {
       await datasource.delete(file.name);

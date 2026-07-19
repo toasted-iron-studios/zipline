@@ -98,18 +98,23 @@ export function startTasks(server: FastifyInstance) {
             const { id, query, data } = message;
 
             let result: any = null;
-            switch (query) {
-              case 'file.findUnique':
-                result = await prisma.file.findUnique(data);
-                break;
-              case 'compressedFile.create':
-                result = await prisma.compressedFile.create(data);
-                break;
-              case 'compressedFile.update':
-                result = await prisma.compressedFile.update(data);
-                break;
-              default:
-                console.error(`Unknown DB query (videoCompress): ${query}`);
+            try {
+              switch (query) {
+                case 'file.findUnique':
+                  result = await prisma.file.findUnique(data);
+                  break;
+                case 'compressedFile.create':
+                  result = await prisma.compressedFile.create(data);
+                  break;
+                case 'compressedFile.update':
+                  result = await prisma.compressedFile.update(data);
+                  break;
+                default:
+                  console.error(`Unknown DB query (videoCompress): ${query}`);
+              }
+            } catch (error) {
+              const code = error && typeof error === 'object' && 'code' in error ? error.code : null;
+              if (code !== 'P2003' && code !== 'P2025') throw error;
             }
 
             this.postMessage({
