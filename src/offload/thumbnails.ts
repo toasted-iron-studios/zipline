@@ -167,6 +167,12 @@ async function generate(config: Config, datasource: Datasource, ids: string[]) {
       });
     }
 
+    if (!t) {
+      await datasource.delete(name(`.thumbnail.${file.id}`)).catch(() => {});
+      logger.debug('file deleted while thumbnail was finishing', { id: file.id });
+      continue;
+    }
+
     logger.info('generated thumbnail', { id: t.id, fileId: file.id, size: bytes(thumbnail.length) });
   }
 }

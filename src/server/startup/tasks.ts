@@ -50,21 +50,26 @@ export function startTasks(server: FastifyInstance) {
             const { id, query, data } = message;
 
             let result: any = null;
-            switch (query) {
-              case 'file.findUnique':
-                result = await prisma.file.findUnique(data);
-                break;
-              case 'thumbnail.findFirst':
-                result = await prisma.thumbnail.findFirst(data);
-                break;
-              case 'thumbnail.create':
-                result = await prisma.thumbnail.create(data);
-                break;
-              case 'thumbnail.update':
-                result = await prisma.thumbnail.update(data);
-                break;
-              default:
-                console.error(`Unknown DB query: ${query}`);
+            try {
+              switch (query) {
+                case 'file.findUnique':
+                  result = await prisma.file.findUnique(data);
+                  break;
+                case 'thumbnail.findFirst':
+                  result = await prisma.thumbnail.findFirst(data);
+                  break;
+                case 'thumbnail.create':
+                  result = await prisma.thumbnail.create(data);
+                  break;
+                case 'thumbnail.update':
+                  result = await prisma.thumbnail.update(data);
+                  break;
+                default:
+                  console.error(`Unknown DB query: ${query}`);
+              }
+            } catch (error) {
+              const code = error && typeof error === 'object' && 'code' in error ? error.code : null;
+              if (code !== 'P2003' && code !== 'P2025') throw error;
             }
 
             this.postMessage({
