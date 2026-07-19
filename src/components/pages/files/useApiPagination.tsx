@@ -20,6 +20,7 @@ type ApiPaginationOptions = {
     | 'favorite';
   order?: 'asc' | 'desc';
   id?: string;
+  allUsers?: boolean;
   folderId?: string;
   search?: {
     field?: string;
@@ -44,6 +45,7 @@ const fetcher = async <T,>(
   if (options.sort) searchParams.append('sortBy', options.sort);
   if (options.order) searchParams.append('order', options.order);
   if (options.id) searchParams.append('id', options.id);
+  if (options.allUsers) searchParams.append('allUsers', 'true');
   if (options.search) {
     if (options.search.field) searchParams.append('searchField', options.search.field);
     searchParams.append('searchQuery', options.search.query);

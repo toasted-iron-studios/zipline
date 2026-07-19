@@ -1,5 +1,5 @@
 import type { File } from '@/lib/db/models/file';
-import { Card } from '@mantine/core';
+import { Badge, Card } from '@mantine/core';
 import { useState } from 'react';
 import DashboardFileType from '../DashboardFileType';
 import DashboardFileModal from './DashboardFileModal';
@@ -10,11 +10,13 @@ export default function DashboardFile({
   file,
   reduce,
   id,
+  showOwner,
   onOpen,
 }: {
   file: File;
   reduce?: boolean;
   id?: string;
+  showOwner?: boolean;
   onOpen?: (fileId: string) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -30,6 +32,11 @@ export default function DashboardFile({
         onClick={() => (onOpen ? onOpen(file.id) : setOpen(true))}
         className={styles.file}
       >
+        {showOwner && file.User && (
+          <Badge pos='absolute' top={8} right={8} style={{ zIndex: 1 }}>
+            {file.User.username}
+          </Badge>
+        )}
         <DashboardFileType key={file.id} file={file} />
       </Card>
     </>

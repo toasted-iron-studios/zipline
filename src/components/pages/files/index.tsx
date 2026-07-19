@@ -1,6 +1,7 @@
 import GridTableSwitcher from '@/components/GridTableSwitcher';
+import { useUserStore } from '@/lib/client/store/user';
 import { useViewStore } from '@/lib/client/store/view';
-import { ActionIcon, Group, Menu, Title, Tooltip } from '@mantine/core';
+import { ActionIcon, Group, Menu, SegmentedControl, Title, Tooltip } from '@mantine/core';
 import {
   IconDots,
   IconFileDots,
@@ -9,7 +10,7 @@ import {
   IconTableOptions,
   IconTags,
 } from '@tabler/icons-react';
-import { parseAsBoolean, useQueryStates } from 'nuqs';
+import { parseAsBoolean, parseAsInteger, useQueryState, useQueryStates } from 'nuqs';
 import { Link } from 'react-router-dom';
 import PendingFilesModal from './PendingFilesModal';
 import TagsModal from './tags/TagsModal';
@@ -37,6 +38,10 @@ export type DashboardFilesModalsUpdate = ReturnType<typeof useModals>[1];
 
 export default function DashboardFiles() {
   const view = useViewStore((state) => state.files);
+  const user = useUserStore((state) => state.user);
+  const [allUsers, setAllUsers] = useQueryState('allUsers', parseAsBoolean.withDefault(false));
+  const [, setPage] = useQueryState('page', parseAsInteger.withDefault(1));
+  const showAllUsers = user?.role === 'SUPERADMIN' && allUsers;
 
   const [modals, setModals] = useModals();
 
@@ -97,17 +102,32 @@ export default function DashboardFiles() {
           </Menu.Dropdown>
         </Menu>
 
+        {user?.role === 'SUPERADMIN' && (
+          <SegmentedControl
+            size='xs'
+            data={[
+              { value: 'mine', label: 'Mine' },
+              { value: 'all', label: 'All Users' },
+            ]}
+            value={showAllUsers ? 'all' : 'mine'}
+            onChange={(value) => {
+              setAllUsers(value === 'all');
+              setPage(1);
+            }}
+          />
+        )}
+
         <GridTableSwitcher type='files' />
       </Group>
 
       {view === 'grid' ? (
         <>
-          <FavoriteFiles />
+          {!showAllUsers && <FavoriteFiles />}
 
-          <Files />
+          <Files allUsers={showAllUsers} />
         </>
       ) : (
-        <FileTable modals={modals} setModals={setModals} />
+        <FileTable allUsers={showAllUsers} modals={modals} setModals={setModals} />
       )}
     </>
   );

@@ -181,11 +181,13 @@ function TagsFilter({
 export default function FileTable({
   id,
   folderId,
+  allUsers,
   modals,
   setModals,
 }: {
   id?: string;
   folderId?: string;
+  allUsers?: boolean;
   modals?: Partial<DashboardFilesModals>;
   setModals?: DashboardFilesModalsUpdate;
 }) {
@@ -257,6 +259,7 @@ export default function FileTable({
     sort,
     order,
     id,
+    allUsers,
     folderId,
     ...(searchQuery[searchField].trim() !== '' && {
       search: {
@@ -387,7 +390,7 @@ export default function FileTable({
           if (!open) setCurrent(null);
         }}
         file={selectedFile}
-        user={id}
+        user={allUsers ? selectedFile?.User?.id : id}
         sequenced
       />
 
@@ -433,7 +436,7 @@ export default function FileTable({
                   {selectedFiles.length > 1 ? 's' : ''}
                 </Button>
 
-                {!id && (
+                {!id && !allUsers && (
                   <Combobox
                     store={combobox}
                     withinPortal={false}
@@ -514,6 +517,15 @@ export default function FileTable({
           records={data?.page ?? []}
           noRecordsText='No files'
           columns={[
+            ...(allUsers
+              ? [
+                  {
+                    accessor: 'uploader',
+                    title: 'Uploader',
+                    render: (file: File) => file.User?.username ?? 'Unknown',
+                  },
+                ]
+              : []),
             ...columns,
             {
               accessor: 'actions',

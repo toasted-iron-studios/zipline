@@ -2,7 +2,7 @@ import { ApiError } from '@/lib/api/errors';
 import { prisma } from '@/lib/db';
 import { File, cleanFiles, fileSchema, fileSelect } from '@/lib/db/models/file';
 import { canInteract } from '@/lib/role';
-import { paginationQs } from '@/lib/validation';
+import { paginationQs, zQsBoolean } from '@/lib/validation';
 import { userMiddleware } from '@/server/middleware/user';
 import typedPlugin from '@/server/typedPlugin';
 import z from 'zod';
@@ -21,6 +21,16 @@ export type ApiUserFilesResponse = {
 };
 
 export const PATH = '/api/user/files';
+const fileListSelect = {
+  ...fileSelect,
+  User: {
+    select: {
+      id: true,
+      username: true,
+    },
+  },
+};
+
 export default typedPlugin(
   async (server) => {
     server.get(
@@ -33,6 +43,7 @@ export default typedPlugin(
             searchField: z.enum(['name', 'originalName', 'type', 'tags', 'id']).optional().default('name'),
             searchQuery: z.string().optional(),
             id: z.string().optional(),
+            allUsers: zQsBoolean.default(false).optional(),
             folder: z.string().optional(),
           }),
           response: {
@@ -53,15 +64,20 @@ export default typedPlugin(
         preHandler: [userMiddleware],
       },
       async (req, res) => {
+        const { allUsers } = req.query;
+        if (allUsers && req.user.role !== 'SUPERADMIN') throw new ApiError(3015);
+
         const user = await prisma.user.findUnique({
           where: {
-            id: req.query.id ?? req.user.id,
+            id: allUsers ? req.user.id : (req.query.id ?? req.user.id),
           },
         });
 
         if (user && user.id !== req.user.id && !canInteract(req.user.role, user.role))
           throw new ApiError(9002);
         if (!user) throw new ApiError(9002);
+
+        const userScope = allUsers ? {} : { userId: user.id };
 
         const { perpage, searchQuery, searchField, page, filter, favorite, sortBy, order, folder } =
           req.query;
@@ -84,7 +100,7 @@ export default typedPlugin(
 
         const incompleteFiles = await prisma.incompleteFile.findMany({
           where: {
-            userId: user.id,
+            ...userScope,
             status: {
               not: 'COMPLETE',
             },
@@ -102,7 +118,7 @@ export default typedPlugin(
 
             const foundTags = await prisma.tag.findMany({
               where: {
-                userId: user.id,
+                ...userScope,
                 id: {
                   in: searchQuery
                     .split(',')
@@ -128,7 +144,7 @@ export default typedPlugin(
 
           const similarityResult = await prisma.file.findMany({
             where: {
-              userId: user.id,
+              ...userScope,
               ...(filter === 'dashboard' && {
                 OR: [
                   {
@@ -177,7 +193,7 @@ export default typedPlugin(
                 folderId,
               }),
             },
-            select: fileSelect,
+            select: fileListSelect,
             orderBy: {
               [sortBy]: order,
             },
@@ -201,7 +217,7 @@ export default typedPlugin(
         }
 
         const where = {
-          userId: user.id,
+          ...userScope,
           ...(filter === 'dashboard' && {
             OR: [
               {
@@ -238,7 +254,7 @@ export default typedPlugin(
           await prisma.file.findMany({
             where,
             select: {
-              ...fileSelect,
+              ...fileListSelect,
               password: true,
             },
             orderBy: {

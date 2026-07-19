@@ -24,7 +24,15 @@ const DashboardFileModal = lazy(() => import('@/components/file/DashboardFile/Da
 
 const PER_PAGE_OPTIONS = [9, 12, 15, 30, 45, 60];
 
-export default function Files({ id, folderId }: { id?: string; folderId?: string }) {
+export default function Files({
+  id,
+  folderId,
+  allUsers,
+}: {
+  id?: string;
+  folderId?: string;
+  allUsers?: boolean;
+}) {
   const [page, setPage] = useQueryState('page', parseAsInteger.withDefault(1));
   const [perpage, setPerpage] = useQueryState('perpage', parseAsInteger.withDefault(15));
 
@@ -32,6 +40,7 @@ export default function Files({ id, folderId }: { id?: string; folderId?: string
     page,
     perpage,
     id,
+    allUsers,
     folderId,
   });
 
@@ -58,7 +67,7 @@ export default function Files({ id, folderId }: { id?: string; folderId?: string
           if (!open) setCurrent(null);
         }}
         file={currentFile}
-        user={id}
+        user={allUsers ? currentFile?.User?.id : id}
         sequenced
       />
 
@@ -77,7 +86,12 @@ export default function Files({ id, folderId }: { id?: string; folderId?: string
         ) : (data?.page?.length ?? 0 > 0) ? (
           data?.page.map((file) => (
             <Suspense fallback={<Skeleton height={350} animate />} key={file.id}>
-              <DashboardFile file={file} id={id} onOpen={(fileId) => setCurrent(fileId)} />
+              <DashboardFile
+                file={file}
+                id={allUsers ? file.User?.id : id}
+                showOwner={allUsers}
+                onOpen={(fileId) => setCurrent(fileId)}
+              />
             </Suspense>
           ))
         ) : (

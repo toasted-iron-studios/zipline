@@ -74,6 +74,14 @@ export const fileSchema = z.object({
   folderId: z.string().nullable(),
   anonymous: z.boolean().nullish(),
 
+  User: z
+    .object({
+      id: z.string(),
+      username: z.string(),
+    })
+    .nullable()
+    .optional(),
+
   thumbnail: z
     .object({
       path: z.string(),
