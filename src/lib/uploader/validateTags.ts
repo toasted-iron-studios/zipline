@@ -8,7 +8,6 @@ export async function validateUploadTags(tagIds?: string[], userId?: string) {
   const tags = await prisma.tag.findMany({
     where: {
       id: { in: tagIds },
-      userId,
     },
     select: { id: true },
   });

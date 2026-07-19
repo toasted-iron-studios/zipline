@@ -6,6 +6,7 @@ export const tagSelect = {
   updatedAt: true,
   name: true,
   color: true,
+  userId: true,
   files: {
     select: {
       id: true,
@@ -19,6 +20,7 @@ export const tagSelectNoFiles = {
   updatedAt: true,
   name: true,
   color: true,
+  userId: true,
 };
 
 export const tagSchema = z.object({
@@ -27,6 +29,7 @@ export const tagSchema = z.object({
   updatedAt: z.date(),
   name: z.string(),
   color: z.string(),
+  userId: z.string().nullable(),
   files: z
     .array(
       z.object({

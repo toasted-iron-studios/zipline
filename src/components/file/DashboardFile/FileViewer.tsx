@@ -5,10 +5,12 @@ import { bytes } from '@/lib/bytes';
 import { useFolders } from '@/lib/client/hooks/useFolders';
 import { useFileNavStore } from '@/lib/client/store/fileNav';
 import { useSettingsStore } from '@/lib/client/store/settings';
+import { useUserStore } from '@/lib/client/store/user';
 import { File } from '@/lib/db/models/file';
 import { Tag } from '@/lib/db/models/tag';
 import { fetchApi } from '@/lib/fetchApi';
 import { buildFolderHierarchy } from '@/lib/folderHierarchy';
+import { canInteract } from '@/lib/role';
 import {
   ActionIcon,
   ActionIconProps,
@@ -124,8 +126,11 @@ export default function FileViewer({
   const clipboard = useClipboard();
   const warnDeletion = useSettingsStore((state) => state.settings.warnDeletion);
   const fileNavButtons = useSettingsStore((state) => state.settings.fileNavButtons);
+  const currentUser = useUserStore((state) => state.user);
+  const canManage =
+    !file?.User || file.User.id === currentUser?.id || canInteract(currentUser?.role, file.User.role);
 
-  const { data: folders } = useFolders(user);
+  const { data: folders } = useFolders(user, canManage);
 
   const folderOptions = useMemo(() => {
     if (!folders) return [];
@@ -143,9 +148,7 @@ export default function FileViewer({
     }
   };
 
-  const { data: tags } = useSWR<Extract<Response['/api/user/tags'], Tag[]>>(
-    user ? `/api/users/${user}/tags` : '/api/user/tags',
-  );
+  const { data: tags } = useSWR<Extract<Response['/api/user/tags'], Tag[]>>('/api/user/tags');
 
   const tagsCombobox = useCombobox();
 
@@ -238,7 +241,7 @@ export default function FileViewer({
 
   const headerActionGroup = file ? (
     <ActionIcon.Group>
-      {!reduce && (
+      {!reduce && canManage && (
         <>
           <ActionButton
             Icon={IconPencil}
@@ -303,7 +306,7 @@ export default function FileViewer({
 
   return (
     <>
-      {file && (
+      {file && canManage && (
         <EditFileDetailsModal open={editFileOpen} onClose={() => setEditFileOpen(false)} file={file} />
       )}
 
@@ -418,72 +421,74 @@ export default function FileViewer({
                     </Combobox.Dropdown>
                   </Combobox>
                 </Box>
-                <Box>
-                  <Title order={4} mb='xs'>
-                    Folder
-                  </Title>
-                  {file.folderId ? (
-                    <Button
-                      color='red'
-                      leftSection={<IconFolderMinus size='1rem' />}
-                      onClick={() => removeFromFolder(file)}
-                      fullWidth
-                    >
-                      Remove from folder &quot;
-                      {folders?.find((f: { id: string }) => f.id === file.folderId)?.name ?? ''}
-                      &quot;
-                    </Button>
-                  ) : (
-                    <Combobox zIndex={90000} store={folderCombobox} onOptionSubmit={(v) => handleAdd(v)}>
-                      <Combobox.Target>
-                        <InputBase
-                          rightSection={<Combobox.Chevron />}
-                          value={search}
-                          onChange={(event) => {
-                            folderCombobox.openDropdown();
-                            folderCombobox.updateSelectedOptionIndex();
-                            setSearch(event.currentTarget.value);
-                          }}
-                          onClick={() => {
-                            folderCombobox.openDropdown();
-                            setSearch('');
-                          }}
-                          onFocus={() => {
-                            folderCombobox.openDropdown();
-                            setSearch('');
-                          }}
-                          onBlur={() => {
-                            folderCombobox.closeDropdown();
-                            setSearch('');
-                          }}
-                          placeholder='Add to folder...'
-                          rightSectionPointerEvents='none'
-                        />
-                      </Combobox.Target>
+                {canManage && (
+                  <Box>
+                    <Title order={4} mb='xs'>
+                      Folder
+                    </Title>
+                    {file.folderId ? (
+                      <Button
+                        color='red'
+                        leftSection={<IconFolderMinus size='1rem' />}
+                        onClick={() => removeFromFolder(file)}
+                        fullWidth
+                      >
+                        Remove from folder &quot;
+                        {folders?.find((f: { id: string }) => f.id === file.folderId)?.name ?? ''}
+                        &quot;
+                      </Button>
+                    ) : (
+                      <Combobox zIndex={90000} store={folderCombobox} onOptionSubmit={(v) => handleAdd(v)}>
+                        <Combobox.Target>
+                          <InputBase
+                            rightSection={<Combobox.Chevron />}
+                            value={search}
+                            onChange={(event) => {
+                              folderCombobox.openDropdown();
+                              folderCombobox.updateSelectedOptionIndex();
+                              setSearch(event.currentTarget.value);
+                            }}
+                            onClick={() => {
+                              folderCombobox.openDropdown();
+                              setSearch('');
+                            }}
+                            onFocus={() => {
+                              folderCombobox.openDropdown();
+                              setSearch('');
+                            }}
+                            onBlur={() => {
+                              folderCombobox.closeDropdown();
+                              setSearch('');
+                            }}
+                            placeholder='Add to folder...'
+                            rightSectionPointerEvents='none'
+                          />
+                        </Combobox.Target>
 
-                      <Combobox.Dropdown>
-                        {folders?.length === 0 && (
-                          <Combobox.Empty>
-                            You have no folders. Start typing to create a new folder for this file.
-                          </Combobox.Empty>
-                        )}
+                        <Combobox.Dropdown>
+                          {folders?.length === 0 && (
+                            <Combobox.Empty>
+                              You have no folders. Start typing to create a new folder for this file.
+                            </Combobox.Empty>
+                          )}
 
-                        <FolderComboboxOptions
-                          folderOptions={folderOptions}
-                          searchValue={search}
-                          additionalOptions={
-                            !folders?.some((f: { name: string }) => f.name === search) &&
-                            search.trim().length > 0 ? (
-                              <Combobox.Option value='$create'>
-                                + Create folder &quot;{search}&quot;
-                              </Combobox.Option>
-                            ) : null
-                          }
-                        />
-                      </Combobox.Dropdown>
-                    </Combobox>
-                  )}
-                </Box>
+                          <FolderComboboxOptions
+                            folderOptions={folderOptions}
+                            searchValue={search}
+                            additionalOptions={
+                              !folders?.some((f: { name: string }) => f.name === search) &&
+                              search.trim().length > 0 ? (
+                                <Combobox.Option value='$create'>
+                                  + Create folder &quot;{search}&quot;
+                                </Combobox.Option>
+                              ) : null
+                            }
+                          />
+                        </Combobox.Dropdown>
+                      </Combobox>
+                    )}
+                  </Box>
+                )}
               </>
             )}
           </Stack>

@@ -46,9 +46,6 @@ export default typedPlugin(
         });
         if (!file) throw new ApiError(4000);
 
-        if (req.user.id !== file.User?.id && !canInteract(req.user.role, file.User?.role ?? 'USER'))
-          throw new ApiError(4000);
-
         return res.send(file);
       },
     );
@@ -86,8 +83,10 @@ export default typedPlugin(
         });
         if (!file) throw new ApiError(4000);
 
-        if (req.user.id !== file.User?.id && !canInteract(req.user.role, file.User?.role ?? 'USER'))
-          throw new ApiError(4000);
+        const canManage =
+          req.user.id === file.User?.id || canInteract(req.user.role, file.User?.role ?? 'USER');
+        const tagOnly = Object.keys(req.body).length === 1 && req.body.tags !== undefined;
+        if (!canManage && !tagOnly) throw new ApiError(4000);
 
         const data: Prisma.FileUpdateInput = {};
 
@@ -111,7 +110,6 @@ export default typedPlugin(
         if (req.body.tags !== undefined) {
           const tags = await prisma.tag.findMany({
             where: {
-              userId: req.user.id !== file.User?.id ? file.User?.id : req.user.id,
               id: {
                 in: req.body.tags,
               },

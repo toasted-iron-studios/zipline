@@ -7,9 +7,11 @@ import { useFolders } from '@/lib/client/hooks/useFolders';
 import { useFileNavStore } from '@/lib/client/store/fileNav';
 import { NAMES, useFileTableSettingsStore } from '@/lib/client/store/fileTableSettings';
 import { useSettingsStore } from '@/lib/client/store/settings';
+import { useUserStore } from '@/lib/client/store/user';
 import { type File } from '@/lib/db/models/file';
 import { Tag } from '@/lib/db/models/tag';
 import { buildFolderHierarchy } from '@/lib/folderHierarchy';
+import { canInteract } from '@/lib/role';
 import {
   ActionIcon,
   Box,
@@ -193,6 +195,9 @@ export default function FileTable({
 }) {
   const clipboard = useClipboard();
   const warnDeletion = useSettingsStore((state) => state.settings.warnDeletion);
+  const currentUser = useUserStore((state) => state.user);
+  const canManageFile = (file: File) =>
+    !file.User || file.User.id === currentUser?.id || canInteract(currentUser?.role, file.User.role);
 
   const fields = useFileTableSettingsStore((state) => state.fields);
 
@@ -569,17 +574,19 @@ export default function FileTable({
                     </ActionIcon>
                   </Tooltip>
 
-                  <Tooltip label='Delete file'>
-                    <ActionIcon
-                      color='red'
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteFile(warnDeletion, file, () => {});
-                      }}
-                    >
-                      <IconTrashFilled size='1rem' />
-                    </ActionIcon>
-                  </Tooltip>
+                  {canManageFile(file) && (
+                    <Tooltip label='Delete file'>
+                      <ActionIcon
+                        color='red'
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteFile(warnDeletion, file, () => {});
+                        }}
+                      >
+                        <IconTrashFilled size='1rem' />
+                      </ActionIcon>
+                    </Tooltip>
+                  )}
                 </Group>
               ),
             },
@@ -602,6 +609,7 @@ export default function FileTable({
           onCellClick={({ record }) => setCurrent(record.id)}
           selectedRecords={selectedFiles}
           onSelectedRecordsChange={setSelectedFiles}
+          isRecordSelectable={canManageFile}
           paginationText={({ from, to, totalRecords }) => `${from} - ${to} / ${totalRecords} files`}
         />
       </Box>

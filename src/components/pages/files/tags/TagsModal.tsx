@@ -1,5 +1,6 @@
 import { mutateFiles } from '@/components/file/actions';
 import { Response } from '@/lib/api/response';
+import { useUserStore } from '@/lib/client/store/user';
 import { Tag } from '@/lib/db/models/tag';
 import { fetchApi } from '@/lib/fetchApi';
 import { ActionIcon, Group, Modal, Paper, Stack, Text, Title, Tooltip } from '@mantine/core';
@@ -21,6 +22,7 @@ export default function TagsModals({
 }) {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [selectedTag, setSelectedTag] = useState<Tag | null>(null);
+  const currentUser = useUserStore((state) => state.user);
 
   const { data: tags, mutate } = useSWR<Extract<Tag[], Response['/api/user/tags']>>('/api/user/tags');
 
@@ -77,19 +79,21 @@ export default function TagsModals({
                   </Text>
                 </Group>
 
-                <Group>
-                  <Tooltip label='Edit tag'>
-                    <ActionIcon variant='outline' onClick={() => setSelectedTag(tag)}>
-                      <IconPencil size='1rem' />
-                    </ActionIcon>
-                  </Tooltip>
+                {tag.userId === currentUser?.id && (
+                  <Group>
+                    <Tooltip label='Edit tag'>
+                      <ActionIcon variant='outline' onClick={() => setSelectedTag(tag)}>
+                        <IconPencil size='1rem' />
+                      </ActionIcon>
+                    </Tooltip>
 
-                  <Tooltip label='Delete tag'>
-                    <ActionIcon variant='outline' color='red' onClick={() => handleDelete(tag)}>
-                      <IconTrashFilled size='1rem' />
-                    </ActionIcon>
-                  </Tooltip>
-                </Group>
+                    <Tooltip label='Delete tag'>
+                      <ActionIcon variant='outline' color='red' onClick={() => handleDelete(tag)}>
+                        <IconTrashFilled size='1rem' />
+                      </ActionIcon>
+                    </Tooltip>
+                  </Group>
+                )}
               </Group>
             ))}
 

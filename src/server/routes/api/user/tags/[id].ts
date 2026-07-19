@@ -22,7 +22,7 @@ export default typedPlugin(
       PATH,
       {
         schema: {
-          description: 'Fetch a specific tag by ID, ensuring it is owned by the authenticated user.',
+          description: 'Fetch a specific tag from the shared authenticated tag catalog.',
           params: paramsSchema,
           response: {
             200: tagSchema,
@@ -36,7 +36,6 @@ export default typedPlugin(
 
         const tag = await prisma.tag.findFirst({
           where: {
-            userId: req.user.id,
             id,
           },
           select: tagSelect,

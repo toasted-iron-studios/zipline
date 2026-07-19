@@ -27,6 +27,7 @@ const fileListSelect = {
     select: {
       id: true,
       username: true,
+      role: true,
     },
   },
 };
@@ -38,7 +39,7 @@ export default typedPlugin(
       {
         schema: {
           description:
-            'List, filter, and search files for the authenticated user (or another user if permitted).',
+            'List, filter, and search files for the authenticated user, another permitted user, or all users.',
           querystring: paginationQs.extend({
             searchField: z.enum(['name', 'originalName', 'type', 'tags', 'id']).optional().default('name'),
             searchQuery: z.string().optional(),
@@ -65,8 +66,6 @@ export default typedPlugin(
       },
       async (req, res) => {
         const { allUsers } = req.query;
-        if (allUsers && req.user.role !== 'SUPERADMIN') throw new ApiError(3015);
-
         const user = await prisma.user.findUnique({
           where: {
             id: allUsers ? req.user.id : (req.query.id ?? req.user.id),

@@ -78,6 +78,7 @@ export const fileSchema = z.object({
     .object({
       id: z.string(),
       username: z.string(),
+      role: z.enum(['USER', 'ADMIN', 'SUPERADMIN']),
     })
     .nullable()
     .optional(),

@@ -6,7 +6,6 @@ import { datasource } from '@/lib/datasource';
 import { prisma } from '@/lib/db';
 import { sanitizeFilename } from '@/lib/fs';
 import { log } from '@/lib/logger';
-import { canInteract } from '@/lib/role';
 import { zQsBoolean } from '@/lib/validation';
 import { userMiddleware } from '@/server/middleware/user';
 import typedPlugin from '@/server/typedPlugin';
@@ -22,7 +21,7 @@ export default typedPlugin(
       {
         schema: {
           description:
-            'Stream a file or thumbnail owned by the authenticated user by ID, with optional password and download handling.',
+            'Stream a file or thumbnail to an authenticated user, with optional password and download handling.',
           params: z.object({
             id: z.string(),
           }),
@@ -55,9 +54,6 @@ export default typedPlugin(
           });
 
           if (!thumbnail) throw new ApiError(9002);
-          if (thumbnail.file && thumbnail.file.userId !== req.user.id) {
-            if (!canInteract(req.user.role, thumbnail.file.User?.role)) throw new ApiError(9002);
-          }
         }
 
         const file = await prisma.file.findFirst({
@@ -68,10 +64,6 @@ export default typedPlugin(
             User: true,
           },
         });
-
-        if (file && file.userId !== req.user.id) {
-          if (!canInteract(req.user.role, file.User?.role)) throw new ApiError(9002);
-        }
 
         if (file?.deletesAt && file.deletesAt <= new Date()) {
           try {

@@ -19,7 +19,7 @@ export default typedPlugin(
       PATH,
       {
         schema: {
-          description: 'List all tags created by the authenticated user.',
+          description: 'List the shared tag catalog for authenticated users.',
           response: {
             200: z.array(tagSchema),
           },
@@ -28,12 +28,7 @@ export default typedPlugin(
         preHandler: [userMiddleware],
       },
       async (req, res) => {
-        const tags = await prisma.tag.findMany({
-          where: {
-            userId: req.user.id,
-          },
-          select: tagSelect,
-        });
+        const tags = await prisma.tag.findMany({ select: tagSelect });
 
         return res.send(tags);
       },
@@ -61,8 +56,7 @@ export default typedPlugin(
 
         const existingTag = await prisma.tag.findFirst({
           where: {
-            name,
-            userId: req.user.id,
+            name: { equals: name, mode: 'insensitive' },
           },
         });
 
